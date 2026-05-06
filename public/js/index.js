@@ -1,10 +1,36 @@
+// index.js
+
 const video = document.getElementById("video");
 const canvas = document.getElementById("canvas");
 const ctx = canvas.getContext("2d");
 
+const css = getComputedStyle(document.documentElement);
+
+const CSS_COLORS = [
+  css.getPropertyValue("--glow-white").trim(),
+  css.getPropertyValue("--glow-blue").trim(),
+  css.getPropertyValue("--glow-purple").trim(),
+  css.getPropertyValue("--glow-cyan").trim()
+];
+
+const SCANLINE_COLOR =
+  css.getPropertyValue("--scanline-color").trim();
+
+const SHADOW_COLOR =
+  css.getPropertyValue("--shadow-color").trim();
+
+const CENTER_LIGHT =
+  css.getPropertyValue("--center-light").trim();
+
+const MIDDLE_LIGHT =
+  css.getPropertyValue("--middle-light").trim();
+
+const OUTER_LIGHT =
+  css.getPropertyValue("--outer-light").trim();
+
 const clones = [];
 
-const CLONE_INTERVAL = 300;
+const CLONE_INTERVAL = 60;
 const MAX_CLONES = 1;
 const MOTION_THRESHOLD = 35;
 
@@ -18,6 +44,7 @@ function resize() {
 }
 
 resize();
+
 window.addEventListener("resize", resize);
 
 navigator.mediaDevices
@@ -25,6 +52,7 @@ navigator.mediaDevices
     video: {
       width: 1280,
       height: 720,
+      frameRate: 60,
       facingMode: "user"
     },
     audio: false
@@ -39,29 +67,45 @@ navigator.mediaDevices
   });
 
 const segmentation = new SelfieSegmentation({
-  locateFile: (file) =>
-    `https://cdn.jsdelivr.net/npm/@mediapipe/selfie_segmentation/${file}`
+locateFile: (file) => `../js/${file}`
 });
 
 segmentation.setOptions({
-  modelSelection: 1
+  modelSelection: 1,
+  selfieMode: true
 });
 
 segmentation.onResults((results) => {
+
   const bodyCanvas = document.createElement("canvas");
+
   bodyCanvas.width = canvas.width;
   bodyCanvas.height = canvas.height;
 
   const bctx = bodyCanvas.getContext("2d");
 
   bctx.save();
+
   bctx.translate(canvas.width, 0);
   bctx.scale(-1, 1);
 
-  bctx.drawImage(results.segmentationMask, 0, 0, canvas.width, canvas.height);
+  bctx.drawImage(
+    results.segmentationMask,
+    0,
+    0,
+    canvas.width,
+    canvas.height
+  );
 
   bctx.globalCompositeOperation = "source-in";
-  bctx.drawImage(results.image, 0, 0, canvas.width, canvas.height);
+
+  bctx.drawImage(
+    results.image,
+    0,
+    0,
+    canvas.width,
+    canvas.height
+  );
 
   bctx.restore();
 
@@ -69,26 +113,33 @@ segmentation.onResults((results) => {
 });
 
 function createMotionClone(frameCanvas, color) {
+
   const w = canvas.width;
   const h = canvas.height;
 
   const temp = document.createElement("canvas");
+
   temp.width = w;
   temp.height = h;
 
-  const tctx = temp.getContext("2d", { willReadFrequently: true });
+  const tctx =
+    temp.getContext("2d", { willReadFrequently: true });
+
   tctx.drawImage(frameCanvas, 0, 0);
 
-  const current = tctx.getImageData(0, 0, w, h);
+  const current =
+    tctx.getImageData(0, 0, w, h);
 
   if (!previousFrame) {
     previousFrame = current;
     return null;
   }
 
-  const output = tctx.createImageData(w, h);
+  const output =
+    tctx.createImageData(w, h);
 
   for (let i = 0; i < current.data.length; i += 4) {
+
     const a1 = current.data[i + 3];
     const a2 = previousFrame.data[i + 3];
 
@@ -107,11 +158,14 @@ function createMotionClone(frameCanvas, color) {
       Math.abs(a1 - a2) * 2;
 
     if (a1 > 20 && diff > MOTION_THRESHOLD) {
+
       output.data[i] = color.r;
       output.data[i + 1] = color.g;
       output.data[i + 2] = color.b;
       output.data[i + 3] = 230;
+
     } else {
+
       output.data[i + 3] = 0;
     }
   }
@@ -119,25 +173,29 @@ function createMotionClone(frameCanvas, color) {
   previousFrame = current;
 
   tctx.clearRect(0, 0, w, h);
+
   tctx.putImageData(output, 0, 0);
 
   return temp;
 }
 
 function captureClone() {
+
   if (!latestBodyFrame) return;
 
-  const colors = [
-    { r: 255, g: 0, b: 0 },
-    { r: 255, g: 40, b: 80 },
-    { r: 130, g: 70, b: 255 },
-    { r: 255, g: 120, b: 170 }
-  ];
+  const randomColor =
+    CSS_COLORS[
+      Math.floor(Math.random() * CSS_COLORS.length)
+    ];
 
-  const cloneImage = createMotionClone(
-    latestBodyFrame,
-    colors[Math.floor(Math.random() * colors.length)]
-  );
+  const [r, g, b] =
+    randomColor.split(",").map(Number);
+
+  const cloneImage =
+    createMotionClone(
+      latestBodyFrame,
+      { r, g, b }
+    );
 
   if (!cloneImage) return;
 
@@ -145,8 +203,10 @@ function captureClone() {
     image: cloneImage,
     age: 0,
     direction: Math.random() > 0.5 ? 1 : -1,
-    offsetY: Math.random() * 30 - 15,
-    rotation: Math.random() * 0.04 - 0.02
+    offsetY: Math.random() * 45 - 22,
+    offsetX: Math.random() * 60 - 30,
+    rotation: Math.random() * 0.08 - 0.04,
+    depth: Math.random()
   });
 
   while (clones.length > MAX_CLONES) {
@@ -155,6 +215,7 @@ function captureClone() {
 }
 
 async function segmentationLoop() {
+
   if (video.readyState >= 2) {
     await segmentation.send({ image: video });
   }
@@ -162,49 +223,125 @@ async function segmentationLoop() {
   requestAnimationFrame(segmentationLoop);
 }
 
+function draw3DLight() {
+
+  ctx.save();
+
+  ctx.globalCompositeOperation = "screen";
+
+  const glow = ctx.createRadialGradient(
+    canvas.width / 2,
+    canvas.height / 2,
+    50,
+    canvas.width / 2,
+    canvas.height / 2,
+    canvas.width * 0.65
+  );
+
+  glow.addColorStop(0, CENTER_LIGHT);
+  glow.addColorStop(0.35, MIDDLE_LIGHT);
+  glow.addColorStop(1, OUTER_LIGHT);
+
+  ctx.fillStyle = glow;
+
+  ctx.fillRect(
+    0,
+    0,
+    canvas.width,
+    canvas.height
+  );
+
+  ctx.restore();
+}
+
 function drawScanlines() {
-  ctx.fillStyle = "rgba(255,255,255,0.03)";
+
+  ctx.save();
+
+  ctx.fillStyle = SCANLINE_COLOR;
 
   for (let y = 0; y < canvas.height; y += 4) {
     ctx.fillRect(0, y, canvas.width, 1);
   }
+
+  ctx.restore();
 }
 
 function render() {
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-  // hide camera view
-  ctx.fillStyle = "black";
-  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  // transparent canvas
+  // css background visible
+  ctx.clearRect(
+    0,
+    0,
+    canvas.width,
+    canvas.height
+  );
 
-  // smooth motion clones
+  draw3DLight();
+
   for (let i = clones.length - 1; i >= 0; i--) {
+
     const clone = clones[i];
 
-    clone.age += 0.018;
+    clone.age += 0.03;
 
     if (clone.age >= 1) {
       clones.splice(i, 1);
       continue;
     }
 
-    const alpha = Math.pow(1 - clone.age, 2.2);
-    const spacing = i * 22 * clone.direction;
-    const drift = clone.age * 130 * clone.direction;
+    const alpha =
+      Math.pow(1 - clone.age, 2.1);
+
+    const depthScale =
+      0.9 + clone.depth * 0.35;
+
+    const spacing =
+      i * 18 * clone.direction;
+
+    const drift =
+      clone.age * 320 * clone.direction;
 
     ctx.save();
+
+    ctx.globalCompositeOperation = "lighter";
+
     ctx.globalAlpha = alpha;
 
-    ctx.translate(canvas.width / 2, canvas.height / 2);
-    ctx.rotate(clone.rotation * clone.age);
-    ctx.scale(1 + clone.age * 0.05, 1 + clone.age * 0.05);
-
     ctx.translate(
-      -canvas.width / 2 + spacing + drift,
-      -canvas.height / 2 + clone.offsetY
+      canvas.width / 2,
+      canvas.height / 2
     );
 
-    ctx.filter = `blur(${clone.age * 1.2}px) saturate(160%)`;
+    ctx.rotate(
+      clone.rotation * clone.age * 3
+    );
+
+    ctx.scale(
+      depthScale + clone.age * 0.35,
+      depthScale + clone.age * 0.35
+    );
+
+    ctx.translate(
+      -canvas.width / 2 +
+        spacing +
+        drift +
+        clone.offsetX,
+
+      -canvas.height / 2 +
+        clone.offsetY -
+        clone.age * 45
+    );
+
+    ctx.filter = `
+      blur(${clone.age * 5}px)
+      brightness(2)
+      contrast(1.3)
+      saturate(190%)
+      drop-shadow(0 0 24px ${SHADOW_COLOR})
+    `;
+
     ctx.drawImage(clone.image, 0, 0);
 
     ctx.restore();
@@ -216,11 +353,18 @@ function render() {
 }
 
 video.addEventListener("playing", () => {
+
   if (!cloneTimerStarted) {
+
     cloneTimerStarted = true;
 
     segmentationLoop();
-    setInterval(captureClone, CLONE_INTERVAL);
+
+    setInterval(
+      captureClone,
+      CLONE_INTERVAL
+    );
+
     render();
   }
 });
