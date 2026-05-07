@@ -1,4 +1,8 @@
 // index.js
+let leapCloneBoost = 1;
+let leapMaxClones = 1;
+let leapDriftBoost = 1;
+let leapColorBoost = false;
 
 const video = document.getElementById("video");
 const canvas = document.getElementById("canvas");
@@ -31,7 +35,7 @@ const OUTER_LIGHT =
 const clones = [];
 
 const CLONE_INTERVAL = 60;
-const MAX_CLONES = 1;
+let MAX_CLONES = 1;
 const MOTION_THRESHOLD = 35;
 
 let cloneTimerStarted = false;
@@ -300,8 +304,8 @@ function render() {
     const spacing =
       i * 18 * clone.direction;
 
-    const drift =
-      clone.age * 320 * clone.direction;
+  const drift =
+    clone.age * 320 * clone.direction * leapDriftBoost;
 
     ctx.save();
 
@@ -336,7 +340,7 @@ function render() {
 
     ctx.filter = `
       blur(${clone.age * 5}px)
-      brightness(2)
+      brightness(${leapColorBoost ? 3.5 : 2})
       contrast(1.3)
       saturate(190%)
       drop-shadow(0 0 24px ${SHADOW_COLOR})
@@ -368,3 +372,35 @@ video.addEventListener("playing", () => {
     render();
   }
 });
+
+const box = document.getElementById("box");
+
+if (window.leapMotion) {
+  window.leapMotion.start((hand) => {
+    // Hand higher = more clones
+    leapMaxClones = Math.min(
+      8,
+      Math.max(1, Math.floor((hand.palmY - 100) / 35))
+    );
+
+    MAX_CLONES = leapMaxClones;
+
+    // Hand closer/farther controls clone interval feel
+    leapCloneBoost = Math.max(
+      0.4,
+      Math.min(2.5, hand.palmZ / 80)
+    );
+
+    // Pinch = stronger clone movement
+    leapDriftBoost = hand.pinch > 0.7 ? 2.2 : 1;
+
+    // Grab = intense mode
+    leapColorBoost = hand.grab > 0.7;
+
+    console.log({
+      clones: MAX_CLONES,
+      drift: leapDriftBoost,
+      intense: leapColorBoost
+    });
+  });
+}

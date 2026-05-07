@@ -1,4 +1,4 @@
-const { app, BrowserWindow, systemPreferences } = require("electron");
+const { app, BrowserWindow } = require("electron");
 const path = require("path");
 
 function createWindow() {
@@ -9,7 +9,8 @@ function createWindow() {
     webPreferences: {
       preload: path.join(__dirname, "preload.js"),
       contextIsolation: true,
-      nodeIntegration: false
+      nodeIntegration: false,
+      sandbox: false
     }
   });
 
@@ -23,4 +24,3 @@ app.whenReady().then(() => {
 app.on("window-all-closed", () => {
   if (process.platform !== "darwin") app.quit();
 });
-

@@ -1,0 +1,17 @@
+timed-clones-electron/
+  main.js
+  preload.js
+  package.json
+  public/
+    templates/
+      index.html
+    css/
+      index.css
+    js/
+      index.js
+      selfie_segmentation.js
+      selfie_segmentation.binarypb
+      selfie_segmentation_landscape.tflite
+      selfie_segmentation_solution_simd_wasm_bin.js
+      selfie_segmentation_solution_simd_wasm_bin.wasm
+      leap.min.js
