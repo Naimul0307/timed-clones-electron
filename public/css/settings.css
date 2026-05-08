@@ -1,0 +1,157 @@
+html,
+body {
+  background: var(--settings-bg);
+
+  color: var(--main-text);
+
+  font-family: Arial, sans-serif;
+
+  min-height: 100vh;
+
+  padding: var(--page-padding);
+}
+
+/* =========================
+   WRAPPER
+========================= */
+
+.settings-wrapper {
+  width: 100%;
+}
+
+/* =========================
+   TITLE
+========================= */
+
+h1 {
+  font-size: var(--title-size);
+
+  margin-bottom: 10px;
+}
+
+/* =========================
+   HINT
+========================= */
+
+.hint {
+  color: var(--secondary-text);
+
+  font-size: var(--hint-size);
+
+  margin-bottom: 25px;
+}
+
+/* =========================
+   COLOR PICKER CARD
+========================= */
+
+.color-picker-container {
+
+  background: var(--card-bg);
+
+  border:
+    1px solid var(--card-border);
+
+  border-radius: var(--card-radius);
+
+  padding: var(--card-padding);
+
+  margin-bottom: 15px;
+}
+
+/* =========================
+   LABEL
+========================= */
+
+.color-picker-container label {
+
+  display: block;
+
+  font-size: var(--label-size);
+
+  color: var(--label-text);
+
+  margin-bottom: 10px;
+}
+
+/* =========================
+   SAVE BUTTON
+========================= */
+
+#saveSettingsBtn {
+
+  width: 100%;
+
+  padding: 14px;
+
+  margin-top: 15px;
+
+  background: var(--button-bg);
+
+  color: var(--button-text);
+
+  border: none;
+
+  border-radius: var(--button-radius);
+
+  font-size: var(--button-size);
+
+  cursor: pointer;
+
+  transition: 0.3s;
+}
+
+#saveSettingsBtn:hover {
+  background: var(--button-hover);
+}
+
+/* =========================
+   STATUS MESSAGE
+========================= */
+
+#statusMessage {
+
+  margin-top: 18px;
+
+  font-size: var(--status-size);
+
+  color: var(--success-color);
+
+  text-align: center;
+}
+
+.settings-section {
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: var(--card-radius);
+  padding: var(--card-padding);
+  margin-top: 20px;
+}
+
+.settings-section h2 {
+  font-size: 20px;
+  margin-bottom: 15px;
+}
+
+.settings-section label {
+  display: block;
+  margin-top: 12px;
+  margin-bottom: 6px;
+  color: var(--label-text);
+  font-size: 14px;
+}
+
+.settings-section input[type="number"] {
+  width: 100%;
+  padding: 10px;
+  background: #0b0b0b;
+  color: white;
+  border: 1px solid #333;
+  border-radius: 8px;
+}
+
+.checkbox-row {
+  display: flex !important;
+  gap: 10px;
+  align-items: center;
+}

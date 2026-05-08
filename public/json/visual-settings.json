@@ -1,0 +1,11 @@
+{
+  "leapCloneBoost": 1,
+  "leapMaxClones": 1,
+  "leapDriftBoost": 1,
+  "leapColorBoost": false,
+  "cloneInterval": 60,
+  "maxClones": 2,
+  "motionThreshold": 35,
+  "snapshotMotionLimit": 25,
+  "maxSnapshots": 5
+}
