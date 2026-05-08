@@ -1,4 +1,6 @@
-const { contextBridge } = require("electron");
+const { contextBridge, ipcRenderer } = require("electron");
+
+/* ---------------- LEAP MOTION ---------------- */
 
 contextBridge.exposeInMainWorld("leapMotion", {
   start(callback) {
@@ -7,9 +9,11 @@ contextBridge.exposeInMainWorld("leapMotion", {
     ws.onopen = () => {
       console.log("Leap Motion WebSocket connected");
 
-      ws.send(JSON.stringify({
-        enableGestures: true
-      }));
+      ws.send(
+        JSON.stringify({
+          enableGestures: true
+        })
+      );
     };
 
     ws.onmessage = (event) => {
@@ -36,5 +40,17 @@ contextBridge.exposeInMainWorld("leapMotion", {
     ws.onclose = () => {
       console.log("Leap Motion WebSocket closed");
     };
+  }
+});
+
+/* ---------------- ELECTRON IPC ---------------- */
+
+contextBridge.exposeInMainWorld("electron", {
+  invoke: (channel, data) => ipcRenderer.invoke(channel, data),
+
+  on: (channel, callback) => {
+    ipcRenderer.on(channel, (event, ...args) => {
+      callback(...args);
+    });
   }
 });
